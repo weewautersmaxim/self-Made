@@ -10,6 +10,28 @@
     <!-- three.js -->
     <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
     <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script src="js/vendor/three/three.js"></script>
+
+    <!--
+
+      Include the OrbitControls script.
+
+      This must be included AFTER the three.js script as it
+      needs to use the global THREE variable
+
+    -->
+
+    <script src="js/vendor/three/OrbitControls.js"></script>
+
+    <!--
+
+			Include the GLTFLoader script. This also needs to be loaded after the three.js script
+
+		-->
+
+    <script src="js/vendor/three/GLTFLoader.js"></script>
+    <script src="js/vendor/three/WebVR.js"></script>
   </head>
   <body>
     <!-- Starting an immersive WebXR session -->
@@ -18,12 +40,14 @@
       async function activateXR() {
         // Add a canvas element and initialize a WebGL context that is compatible with WebXR.
         const canvas = document.createElement("canvas");
+
         document.body.appendChild(canvas);
         const gl = canvas.getContext("webgl", { xrCompatible: true });
 
-        //Step 2
+        //----- Step 2 -------
         const scene = new THREE.Scene();
         let clock = new THREE.Clock();
+        const mixers = [];
         let mixer;
 
         var hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
@@ -34,7 +58,7 @@
         dirLight.position.set(75, 300, 0);
         scene.add(dirLight);
 
-        //step 3
+        //----- step 3 -------
 
         // Set up the WebGLRenderer, which handles rendering to the session's base layer.
         const renderer = new THREE.WebGLRenderer({
@@ -51,7 +75,7 @@
         const camera = new THREE.PerspectiveCamera();
         camera.matrixAutoUpdate = false;
 
-        // step 4
+        // ----- step 4 -------
 
         // Initialize a WebXR session using "immersive-ar".
         const session = await navigator.xr.requestSession("immersive-ar", {
@@ -85,27 +109,26 @@
           }
         );
 
-        let flower;
-        loader.load("key/key.glb", function (gltf) {
-          const model = gltf.scene;
+        loader.load("models/Parrot.glb", function (gltf) {
+          const model = gltf.scene.children[0];
+
           //scale of model
           gltf.scene.scale.multiplyScalar(1 / 10);
-          model.position.x = 20; // once rescaled, position the model where needed
-          model.position.z = -20;
-          // mixer = new THREE.AnimationMixer(model);
-          // mixer.clipAction(gltf.animations[0]).play();
 
-          // mixer = new THREE.AnimationMixer(model);
-          // mixer.clipAction(model.animations[0]).play();
+          const animation = gltf.animations[0];
+          const mixer = new THREE.AnimationMixer(model);
+          mixers.push(mixer);
 
-          animate();
+          const action = mixer.clipAction(animation);
+          action.play();
+
+          // model.position.x = 20; // once rescaled, position the model where needed
+          // model.position.z = -20;
 
           //set default rotation to start direction user
           gltf.scene.rotation.y = (camera.rotation.x * Math.PI) / 2;
           flower = gltf.scene;
         });
-        // animate();
-
         // XRSession receives select events when the user completes a primary action. In an AR session, this corresponds to a
         // tap on the screen.
 
@@ -117,7 +140,7 @@
           }
         });
 
-        //step 5
+        //----- step 5 -------
         // Create a render loop that allows us to draw on the AR view.
         const onXRFrame = (time, frame) => {
           // Queue up the next draw request.
@@ -160,12 +183,15 @@
             renderer.render(scene, camera);
           }
         };
-        function animate() {
-          requestAnimationFrame(animate);
 
+        renderer.setAnimationLoop(() => {
+          animate();
+        });
+
+        function animate() {
           const delta = clock.getDelta();
 
-          if (mixer) {
+          for (const mixer of mixers) {
             mixer.update(delta);
           }
 
