@@ -100,6 +100,9 @@
         //Use the model loader from the previous step to load a targeting reticle and a sunflower from the web.
         const loader = new THREE.GLTFLoader();
         let reticle;
+
+        let flower;
+        let model;
         loader.load(
           "https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf",
           function (gltf) {
@@ -108,36 +111,63 @@
             scene.add(reticle);
           }
         );
+        let test;
+        // loader.load("models/Parrot.glb", function (gltf) {
+        //   model = gltf.scene.children[0];
+        //   test = gltf;
 
-        loader.load("models/Parrot.glb", function (gltf) {
-          const model = gltf.scene.children[0];
+        //   //scale of model
+        //   gltf.scene.scale.multiplyScalar(1 / 10);
 
-          //scale of model
-          gltf.scene.scale.multiplyScalar(1 / 10);
+        //   // model.position.x = 20; // once rescaled, position the model where needed
+        //   // model.position.z = -20;
 
-          const animation = gltf.animations[0];
-          const mixer = new THREE.AnimationMixer(model);
-          mixers.push(mixer);
-
-          const action = mixer.clipAction(animation);
-          action.play();
-
-          // model.position.x = 20; // once rescaled, position the model where needed
-          // model.position.z = -20;
-
-          //set default rotation to start direction user
-          gltf.scene.rotation.y = (camera.rotation.x * Math.PI) / 2;
-          flower = gltf.scene;
-        });
+        //   //set default rotation to start direction user
+        //   gltf.scene.rotation.y = (camera.rotation.x * Math.PI) / 2;
+        //   flower = gltf.scene;
+        // });
         // XRSession receives select events when the user completes a primary action. In an AR session, this corresponds to a
         // tap on the screen.
 
         session.addEventListener("select", (event) => {
-          if (flower) {
-            const clone = flower.clone();
-            clone.position.copy(reticle.position);
-            scene.add(clone);
-          }
+          loader.load("test4/scene.gltf", function (gltf) {
+            model = gltf.scene.children[0];
+            test = gltf;
+
+            //scale of model
+            gltf.scene.scale.multiplyScalar(10);
+
+            // model.position.x = 20; // once rescaled, position the model where needed
+            // model.position.z = -20;
+
+            //set default rotation to start direction user
+            gltf.scene.rotation.y = (camera.rotation.x * Math.PI) / 2;
+            // flower = gltf.scene;
+
+            gltf.scene.position.copy(reticle.position);
+
+            const animation = gltf.animations[0];
+            const mixer = new THREE.AnimationMixer(model);
+            mixers.push(mixer);
+
+            const action = mixer.clipAction(animation);
+            action.play();
+
+            scene.add(gltf.scene);
+          });
+          // if (flower) {
+          //   const clone = flower.clone();
+          //   clone.position.copy(reticle.position);
+
+          //   const animation = test.animations[0];
+          //   const mixer = new THREE.AnimationMixer(model);
+          //   mixers.push(mixer);
+
+          //   const action = mixer.clipAction(animation);
+          //   action.play();
+
+          //   scene.add(clone);
+          // }
         });
 
         //----- step 5 -------
